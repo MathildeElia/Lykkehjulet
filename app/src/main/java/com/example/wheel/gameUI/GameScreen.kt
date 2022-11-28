@@ -21,10 +21,10 @@ import com.example.wheel.*
 import com.example.wheel.gameUI.Viewmodel
 import com.example.wheel.ui.theme.WheelTheme
 
+val viewmodel: Viewmodel = Viewmodel()
 
 @Composable
 fun Keyboard() {
-    val viewmodel: Viewmodel()
 
     Column() {
         Row(modifier = Modifier.padding(18.dp,0.dp,0.dp,0.dp)) {
@@ -53,7 +53,9 @@ fun InsertLetter(i : Int) {
 
     Button(
         onClick = {
-            pressKeyboardLetter()
+            if(viewmodel.pressKeyboardLetter(i)){
+                color.value = Color.LightGray
+            }
         },
         contentPadding = PaddingValues(
             start = 1.dp,
@@ -70,7 +72,7 @@ fun InsertLetter(i : Int) {
 
     {
         Text(
-            text = letters[i],
+            text = viewmodel.letters[i],
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 25.sp,
@@ -80,27 +82,20 @@ fun InsertLetter(i : Int) {
 
     if (hasBeenPressed.value){
         //gæt her
-        guessedLetters(letter = letters[i])
+        guessedLetters(letter = viewmodel.letters[i])
     }
 }
 
 @Composable
-fun FindCurrentWord() {
-    val ran = (0..3).random()
-    currentWord.value = allWords[1][ran]
-    Text("Category is: " + allWords[0][ran], fontSize = 20.sp)
-
-    //make letter objects
-    for(letter in currentWord.value){
-        lettersInWord.add(Letter(letter.toString()))
-    }
+fun ShowCategory() {
+    Text("Category is: " + viewmodel.findCurrentWord(), fontSize = 20.sp)
 }
 
 @Composable
 fun guessedLetters(letter: String): Int {
     var counter = 0
 
-    for (l in lettersInWord){
+    for (l in viewmodel.lettersInWord){
         if(l.letter == letter){
             l.makeVisible()
             //ChangeLetterVisibility(letter = l)
@@ -115,7 +110,7 @@ fun Word() {
     Row() {
         Text(
             buildAnnotatedString {
-                for(letter in lettersInWord){
+                for(letter in viewmodel.lettersInWord){
                     ChangeLetterVisibility(letter = letter)
                 }
             }//, style = TextStyle(textDecoration = TextDecoration.Underline, color = Color.Black)
@@ -144,12 +139,7 @@ fun ChangeLetterVisibility(letter: Letter) {
                 border(BorderStroke(2.dp, Color.Red))
             }
     ){
-        if(letter.isVisible.value) {
-            Text(letter.letter)
-        }
-        else{
-            Text("")
-        }
+        Text(viewmodel.printLetter(letter))
         /*
         AnimatedVisibility(
             visible = true,
@@ -184,17 +174,7 @@ fun SpinButton() {
 
     Button(
         onClick = {
-            //From first click and onwards, s
-            val ran = (0..6).random()
-            val newSpinValue = values[ran]
-            if (newSpinValue == 0) {
-                spinValue.value = "Bankrupt!"
-                points.value = 0
-            } else {
-                spinValue.value = "You got $newSpinValue points!"
-                //det her skal ikke være her, men når der bliver gættet.
-                points.value += newSpinValue
-            }
+            viewmodel.spinClicked()
         }, shape = RoundedCornerShape(40.dp),
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Magenta),
         modifier = Modifier
@@ -212,13 +192,13 @@ fun SpinButton() {
 
 @Composable
 fun ValueMessage() {
-    val value by spinValue
+    val value by viewmodel.spinValue
     Text(value, fontSize = 25.sp)
 }
 
 @Composable
 fun PointsMessage() {
-    val currentPoints by points
+    val currentPoints by viewmodel.points
     Text("Points: $currentPoints", fontSize = 25.sp)
 }
 
@@ -241,11 +221,11 @@ fun Layout() {
     {
         PointsMessage()
         Message()
-        FindCurrentWord()
+        ShowCategory()
         Word()
         ValueMessage()
         Spacer(modifier = Modifier.height(30.dp))
-        Text("Guessed: ${guessedLettersList.value}")
+        Text("Guessed: ${viewmodel.guessedLettersList.value}")
         SpinButton()
         Keyboard()
     }

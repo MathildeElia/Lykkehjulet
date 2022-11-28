@@ -49,32 +49,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-/*
-@Composable
-fun buttonExample() {
-    Box() {
-        Image(painter = painterResource(id = R.drawable.knap), contentDescription = null,
-            modifier = Modifier.clickable { println("Button Clicked!") })
-    }
-}*/
-
-val values = arrayOf(0, 500, 600, 700, 800, 900, 10000)
-val spinValue = mutableStateOf("")
-val points = mutableStateOf(0)
-val currentWord = mutableStateOf("")
-val allWords: Array<Array<String>> = arrayOf(
-    arrayOf("Around the House", "Rhyme Time", "On The Map", "Occupation"),
-    arrayOf("DINING ROOM TABLE", "YUMMY IN MY TUMMY", "QUEBEC", "AUTO MECHANIC")
-)
-val letters = arrayOf(
-    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
-    "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
-)
-val guessedLettersList = mutableStateOf("")
-val lettersInWord = mutableListOf<Letter>()
-
-//opstilling af ord med tomme firkanter (ikke gættet)
-//og viste bogstaver (gættet)
-//hvis bogstav er i ord, så find fundet bogstav og gør dem synlige.
-
