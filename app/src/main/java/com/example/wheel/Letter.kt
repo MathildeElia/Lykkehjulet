@@ -10,4 +10,5 @@ class Letter constructor(val letter: String){
     fun makeVisible(){
         _isVisible.value = true
     }
+
 }

@@ -1,57 +1,80 @@
 package com.example.wheel.gameUI
 
-import androidx.compose.material.Text
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import com.example.wheel.KeyboardLetter
 import com.example.wheel.Letter
+import com.example.wheel.State
 
 class Viewmodel : ViewModel() {
 
     //stateflow
+    val lives = mutableStateOf(5)
     val values = arrayOf(0, 500, 600, 700, 800, 900, 10000)
-    val spinValue = mutableStateOf("")
+    var curSpinValue = 0
+    val spinValueString = mutableStateOf("")
     val points = mutableStateOf(0)
     val currentWord = mutableStateOf("")
     val allWords: Array<Array<String>> = arrayOf(
         arrayOf("Around the House", "Rhyme Time", "On The Map", "Occupation"),
         arrayOf("DINING ROOM TABLE", "YUMMY IN MY TUMMY", "QUEBEC", "AUTO MECHANIC")
     )
-    val letters = arrayOf(
-        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
-        "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
-    )
+    var keyboardLetters = ArrayList<KeyboardLetter>()
+
+
+    val currentState = mutableStateOf(State.SPIN)
+
     val guessedLettersList = mutableStateOf("")
     val lettersInWord = mutableListOf<Letter>()
 
-    fun pressKeyboardLetter(i: Int): Boolean {
-        val hasBeenPressed = mutableStateOf(false)
+    fun looseALife(){
+        lives.value--
+    }
 
-        if (!hasBeenPressed.value) {
-            hasBeenPressed.value = true
-
-            //guessedLetters(letters[i])
-            //guess here
-            guessedLettersList.value += letters[i]
-            //gæt her
-            guessedLetters(letter = letters[i])
-            return true
-        } else {
-            return false
+    fun addValuesToKeyboard(){
+        var c = 'A'
+        while (c <= 'Z') {
+            keyboardLetters.add(KeyboardLetter(c.toString()))
+            ++c
         }
     }
 
-    fun guessedLetters(letter: String): Int {
-        var counter = 0
+
+    fun pressKeyboardLetter(i: Int): Boolean {
+        //val hasBeenPressed = mutableStateOf(letters[i].isPressed.value)
+        if (currentState.value == State.GUESS) {
+            if (!keyboardLetters[i].isPressed.value) {
+                keyboardLetters[i].pressLetter()
+
+                //guessedLetters(letters[i])
+                guessedLettersList.value += keyboardLetters[i].letter
+                //gæt her
+                guess(letter = keyboardLetters[i].letter)
+
+                //Tjek om spillet er færdigt!
+                currentState.value = State.SPIN
+                return true
+            } else {
+                return false
+            }
+        }
+        return false
+    }
+
+    fun guess(letter: String) {
+        var isGuessCorrect = false
 
         for (l in lettersInWord) {
             if (l.letter == letter) {
+                isGuessCorrect = true
                 l.makeVisible()
-                //ChangeLetterVisibility(letter = l)
-                counter++
+                //com.example.wheel.gameUI.ChangeLetterVisibility(letter = l)
+                points.value += curSpinValue
             }
         }
-        return counter
+        if(!isGuessCorrect){
+            looseALife()
+        }
     }
 
     fun findCurrentWord(): String {
@@ -67,15 +90,17 @@ class Viewmodel : ViewModel() {
 
     //returnerer spinvalue
     fun spinClicked() {
-        val ran = (0..6).random()
-        val newSpinValue = values[ran]
-        if (newSpinValue == 0) {
-            spinValue.value = "Bankrupt!"
-            points.value = 0
-        } else {
-            spinValue.value = "You got $newSpinValue points!"
-            //det her skal ikke være her, men når der bliver gættet.
-            points.value += newSpinValue
+        if (currentState.value == State.SPIN) {
+            val ran = (0..6).random()
+            curSpinValue = values[ran]
+            if (curSpinValue == 0) {
+                spinValueString.value = "Bankrupt :("
+                points.value = 0
+            } else {
+                spinValueString.value = "You spun $curSpinValue p!"
+                //det her skal ikke være her, men når der bliver gættet.
+                currentState.value = State.GUESS
+            }
         }
     }
 

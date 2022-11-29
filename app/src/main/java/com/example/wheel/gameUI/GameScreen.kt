@@ -1,3 +1,5 @@
+package com.example.wheel.gameUI
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -18,37 +20,35 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.wheel.*
-import com.example.wheel.gameUI.Viewmodel
 import com.example.wheel.ui.theme.WheelTheme
 
 val viewmodel: Viewmodel = Viewmodel()
 
 @Composable
 fun Keyboard() {
+    viewmodel.addValuesToKeyboard()
 
     Column() {
         Row(modifier = Modifier.padding(18.dp,0.dp,0.dp,0.dp)) {
             for (i in 0..7) {
-                InsertLetter(i = i)
+                InsertLetterInKeyboard(i = i)
             }
         }
         Row() {
             for (i in 8..16) {
-                InsertLetter(i = i)
+                InsertLetterInKeyboard(i = i)
             }
         }
         Row() {
             for (i in 17..25) {
-                InsertLetter(i = i)
+                InsertLetterInKeyboard(i = i)
             }
         }
     }
 }
 
 @Composable
-fun InsertLetter(i : Int) {
-    val hasBeenPressed =  remember { mutableStateOf(false) }
-
+fun InsertLetterInKeyboard(i : Int) {
     val color = remember { mutableStateOf(Color.Magenta) }
 
     Button(
@@ -72,17 +72,12 @@ fun InsertLetter(i : Int) {
 
     {
         Text(
-            text = viewmodel.letters[i],
+            text = viewmodel.keyboardLetters[i].letter,
             color = Color.White,
             fontWeight = FontWeight.Bold,
             fontSize = 25.sp,
             modifier = Modifier.offset(0.dp, (-3).dp)
         )
-    }
-
-    if (hasBeenPressed.value){
-        //gæt her
-        guessedLetters(letter = viewmodel.letters[i])
     }
 }
 
@@ -92,28 +87,14 @@ fun ShowCategory() {
 }
 
 @Composable
-fun guessedLetters(letter: String): Int {
-    var counter = 0
-
-    for (l in viewmodel.lettersInWord){
-        if(l.letter == letter){
-            l.makeVisible()
-            //ChangeLetterVisibility(letter = l)
-            counter++
-        }
-    }
-    return counter
-}
-
-@Composable
-fun Word() {
+fun BuildWord() {
     Row() {
         Text(
             buildAnnotatedString {
                 for(letter in viewmodel.lettersInWord){
-                    ChangeLetterVisibility(letter = letter)
+                    InsertLetterInWord(letter)
                 }
-            }//, style = TextStyle(textDecoration = TextDecoration.Underline, color = Color.Black)
+            }
         )
     }
 }
@@ -126,16 +107,13 @@ fun Modifier.conditional(condition : Boolean, modifier : Modifier.() -> Modifier
     }
 }
 
-//Forsøg på at gøre bogstav synligt.
 @Composable
-fun ChangeLetterVisibility(letter: Letter) {
-    //val curLetter by remember { mutableStateOf(letter) }
-
+fun InsertLetterInWord(letter: Letter) {
     Box(
         Modifier
             .size(30.dp)
             .padding(2.dp)
-            .conditional(letter.letter != " "){
+            .conditional(letter.letter != " ") {
                 border(BorderStroke(2.dp, Color.Red))
             }
     ){
@@ -192,7 +170,7 @@ fun SpinButton() {
 
 @Composable
 fun ValueMessage() {
-    val value by viewmodel.spinValue
+    val value by viewmodel.spinValueString
     Text(value, fontSize = 25.sp)
 }
 
@@ -200,6 +178,12 @@ fun ValueMessage() {
 fun PointsMessage() {
     val currentPoints by viewmodel.points
     Text("Points: $currentPoints", fontSize = 25.sp)
+}
+
+@Composable
+fun ShowLives() {
+    val currentLives by viewmodel.lives
+    Text("Lives: $currentLives", fontSize = 25.sp)
 }
 
 
@@ -220,9 +204,10 @@ fun Layout() {
     )
     {
         PointsMessage()
+        ShowLives()
         Message()
         ShowCategory()
-        Word()
+        BuildWord()
         ValueMessage()
         Spacer(modifier = Modifier.height(30.dp))
         Text("Guessed: ${viewmodel.guessedLettersList.value}")
@@ -230,8 +215,6 @@ fun Layout() {
         Keyboard()
     }
 }
-
-
 
 
 @Preview(showBackground = true)
@@ -266,7 +249,7 @@ fun Letter(letter: String) {
 
 /*
 Composable
-fun BuildWord(word: Word) {
+fun BuildWord(word: com.example.wheel.gameUI.Word) {
     LazyVerticalGrid(
         cells = GridCells.Fixed(9),
         content = {
