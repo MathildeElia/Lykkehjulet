@@ -25,7 +25,6 @@ val viewmodel: Viewmodel = Viewmodel()
 @Composable
 fun GameScreen(navController: NavController) {
     Layout(navController)
-    //EndScreenNavi(navController = navController)
 }
 
 @Composable
