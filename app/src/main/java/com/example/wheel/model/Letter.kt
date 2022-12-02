@@ -1,4 +1,4 @@
-package com.example.wheel
+package com.example.wheel.model
 
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf

@@ -15,19 +15,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
-import com.example.wheel.*
-import com.example.wheel.State
+import com.example.wheel.Navigation
+import com.example.wheel.model.Letter
 import com.example.wheel.ui.theme.WheelTheme
-import kotlin.system.exitProcess
 
 val viewmodel: Viewmodel = Viewmodel()
 
 @Composable
 fun GameScreen(navController: NavController) {
-    Layout()
+    Layout(navController)
+    //EndScreenNavi(navController = navController)
 }
 
 @Composable
@@ -91,7 +89,7 @@ fun InsertLetterInKeyboard(i: Int) {
 }
 
 @Composable
-fun Layout() {
+fun Layout(navController: NavController) {
 
     // on below line we
     // are specifying background color
@@ -123,18 +121,22 @@ fun Layout() {
                 horizontalAlignment = Alignment.CenterHorizontally
             )
             {
-                PointsMessage()
-                ShowLives()
+                if(!viewmodel.isStarted){
+                    viewmodel.findCurrentWord()
+                    viewmodel.isStarted = true
+                }
+                Row(){
+                    PointsMessage()
+                    Spacer(modifier = Modifier.width(200.dp))
+                    ShowLives()
+                }
                 Message()
                 ShowCategory()
                 BuildWord()
                 ValueMessage()
                 Spacer(modifier = Modifier.height(40.dp))
-                Text("Guessed: ${viewmodel.guessedLettersList.value}")
-                SpinButton()
-                Spacer(modifier = Modifier.height(40.dp))
+                SpinButton(navController)
                 Keyboard()
-
             }
         }
     }
@@ -195,7 +197,7 @@ fun InsertLetterInWord(letter: Letter) {
             .size(30.dp)
             .padding(2.dp)
             .conditional(letter.letter != " ") {
-                border(BorderStroke(2.dp, Color.Red))
+                border(BorderStroke(2.dp, Color.Magenta))
             }
     ) {
         Text(viewmodel.printLetter(letter))
@@ -203,11 +205,21 @@ fun InsertLetterInWord(letter: Letter) {
 }
 
 @Composable
-fun SpinButton() {
-
+fun SpinButton(navController : NavController) {
+    val text = remember {mutableStateOf("!Spin!" )}
+    var textSize = 40
+    if(viewmodel.isGameOver()){
+        textSize = 20
+        text.value = "Play Again"
+    }
     Button(
         onClick = {
-            viewmodel.spinClicked()
+            if(!viewmodel.isGameOver()){
+                viewmodel.spinClicked()
+            }
+            else{
+                navController.navigate(Screen.StartScreen.route)
+            }
         }, shape = RoundedCornerShape(40.dp),
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Magenta),
         modifier = Modifier
@@ -217,8 +229,8 @@ fun SpinButton() {
 
     {
         Text(
-            text = "!Spin!", color = Color.White,
-            fontSize = 40.sp
+            text = text.value, color = Color.White,
+            fontSize = textSize.sp
         )
     }
 }
@@ -226,25 +238,31 @@ fun SpinButton() {
 
 @Composable
 fun ShowCategory() {
-    Text("Category is: " + viewmodel.findCurrentWord(), fontSize = 20.sp)
+    val curCategory by viewmodel.currentCategory
+    Text("Category is: $curCategory", fontSize = 20.sp)
 }
 
 @Composable
 fun ValueMessage() {
     val value by viewmodel.spinValueString
-    Text(value, fontSize = 25.sp)
+    if(!viewmodel.isGameOver()){
+        Text(value, fontSize = 25.sp)
+    }
+    else{
+        Text(viewmodel.endMessage.value, fontSize = 30.sp)
+    }
 }
 
 @Composable
 fun PointsMessage() {
     val currentPoints by viewmodel.points
-    Text("Points: $currentPoints", fontSize = 25.sp)
+    Text("Points: $currentPoints", fontSize = 25.sp, textAlign = TextAlign.Start)
 }
 
 @Composable
 fun ShowLives() {
     val currentLives by viewmodel.lives
-    Text("Lives: $currentLives", fontSize = 25.sp)
+    Text("$currentLives :Lives", fontSize = 25.sp, textAlign = TextAlign.End)
 }
 
 
@@ -260,6 +278,6 @@ fun Message() {
 @Composable
 fun DefaultPreview() {
     WheelTheme {
-        Layout()
+        Navigation()
     }
 }

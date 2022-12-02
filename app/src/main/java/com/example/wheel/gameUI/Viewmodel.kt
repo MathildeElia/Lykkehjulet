@@ -2,13 +2,14 @@ package com.example.wheel.gameUI
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.wheel.KeyboardLetter
-import com.example.wheel.Letter
-import com.example.wheel.State
+import com.example.wheel.model.KeyboardLetter
+import com.example.wheel.model.Letter
+import com.example.wheel.model.State
 
 class Viewmodel : ViewModel() {
 
     //stateflow
+    var isStarted = false
     val lives = mutableStateOf(5)
     val values = arrayOf(0, 500, 600, 700, 800, 900, 10000)
     var curSpinValue = 0
@@ -20,26 +21,30 @@ class Viewmodel : ViewModel() {
         arrayOf("Around the House", "Rhyme Time", "On The Map", "Occupation"),
         arrayOf("CANDLEHOLDERS", "SUPERDUPER", "QUEBEC", "ZOOKEEPER")
     )
-    var keyboardLetters = ArrayList<KeyboardLetter>()
-
     val currentState = mutableStateOf(State.SPIN)
 
+    var keyboardLetters = ArrayList<KeyboardLetter>()
     val guessedLettersList = mutableStateOf("")
     val lettersInWord = mutableListOf<Letter>()
 
-    fun initGame() : Boolean{
-        currentState.value = State.SPIN
-        guessedLettersList.value = ""
-        lettersInWord.clear()
-        points.value = 0
-        spinValueString.value = ""
-        curSpinValue = 0
+    val endMessage = mutableStateOf("")
+    val winnerMessage = "You have guessed the word!\n" +
+            "You WON!! Congratulations :) "
+    val loseMessage = "You lost all your lives :( \n" +
+            "You lost.. Try again"
+
+    fun gameInit(){
+        endMessage.value = ""
+        isStarted = false
         lives.value = 5
+        curSpinValue = 0
+        spinValueString.value = ""
+        points.value = 0
+        currentState.value = State.SPIN
         keyboardLetters.clear()
         addValuesToKeyboard()
-        findCurrentWord()
-
-        return true
+        guessedLettersList.value = ""
+        lettersInWord.clear()
     }
 
     fun looseALife() {
@@ -53,7 +58,6 @@ class Viewmodel : ViewModel() {
             ++c
         }
     }
-
 
     fun pressKeyboardLetter(i: Int): Boolean {
         //val hasBeenPressed = mutableStateOf(letters[i].isPressed.value)
@@ -93,18 +97,14 @@ class Viewmodel : ViewModel() {
         }
     }
 
-    fun findCurrentWord() : String {
+    fun findCurrentWord() {
         val ran = (0..3).random()
         currentWord.value = allWords[1][ran]
-
+        currentCategory.value = allWords[0][ran]
         //make letter objects
         for (letter in currentWord.value) {
             lettersInWord.add(Letter(letter.toString()))
-            if (letter.toString() == " ") {
-                lettersInWord.last().makeVisible()
-            }
         }
-        return allWords[0][ran]
     }
 
     //returnerer spinvalue
@@ -142,10 +142,12 @@ class Viewmodel : ViewModel() {
     fun isGameOver(): Boolean {
         if (isAllLettersGuessed()) {
             currentState.value = State.WIN
+            endMessage.value = winnerMessage
             return true
         }
         if (lives.value == 0) {
             currentState.value = State.LOST
+            endMessage.value = loseMessage
             return true
         }
         return false

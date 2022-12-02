@@ -44,6 +44,7 @@ fun StartScreen(navController: NavController) {
             )
             {
                 Button(onClick = {
+                    viewmodel.gameInit()
                     navController.navigate(Screen.GameScreen.route)
                 }) {
                     Text(text = "Start Game! :)")
