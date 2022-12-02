@@ -1,23 +1,15 @@
 package com.example.wheel.gameUI
 
-import android.content.ComponentName
-import android.content.Intent
-import android.content.pm.PackageManager
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,7 +26,7 @@ import kotlin.system.exitProcess
 val viewmodel: Viewmodel = Viewmodel()
 
 @Composable
-fun GameScreen(navController: NavController){
+fun GameScreen(navController: NavController) {
     Layout()
 }
 
@@ -65,13 +57,13 @@ fun Keyboard() {
 
 @Composable
 fun InsertLetterInKeyboard(i: Int) {
-    val color = remember { mutableStateOf(viewmodel.keyboardLetters[i].color.value) }
+    val color = remember { mutableStateOf(Color.Magenta) }
 
     Button(
         //colors = ButtonDefaults.buttonColors(backgroundColor = Color.Magenta),
         onClick = {
             if (viewmodel.pressKeyboardLetter(i)) {
-                viewmodel.keyboardLetters[i].color.value = Color.LightGray
+                color.value = Color.LightGray
             }
         },
         contentPadding = PaddingValues(
@@ -99,8 +91,7 @@ fun InsertLetterInKeyboard(i: Int) {
 }
 
 @Composable
-fun winPopUp() {
-    var restartIsPressed by remember {mutableStateOf(false)}
+fun Layout() {
 
     // on below line we
     // are specifying background color
@@ -132,154 +123,31 @@ fun winPopUp() {
                 horizontalAlignment = Alignment.CenterHorizontally
             )
             {
-                if(!restartIsPressed){
-                    Button(onClick = {
-                        restartIsPressed = viewmodel.initGame()
-                    }) {
-                        Text(text = "Start Game! :)")
-                    }
-                }
+                PointsMessage()
+                ShowLives()
+                Message()
+                ShowCategory()
+                BuildWord()
+                ValueMessage()
+                Spacer(modifier = Modifier.height(40.dp))
+                Text("Guessed: ${viewmodel.guessedLettersList.value}")
+                SpinButton()
+                Spacer(modifier = Modifier.height(40.dp))
+                Keyboard()
 
-                if(restartIsPressed){
-                    PopupWindowDialog()
-                    PointsMessage()
-                    ShowLives()
-                    Message()
-                    ShowCategory()
-                    BuildWord()
-                    ValueMessage()
-                    Spacer(modifier = Modifier.height(40.dp))
-                    Text("Guessed: ${viewmodel.guessedLettersList.value}")
-                    SpinButton()
-                    Spacer(modifier = Modifier.height(40.dp))
-                    Keyboard()
-                    RestartButton()
-
-                    restartIsPressed = false
-                }
             }
         }
     }
 }
-
-@Composable
-fun PopupWindowDialog() {
-    // on below line we are creating variable for button title
-    // and open dialog.
-    val gameOver = remember { mutableStateOf(State.SPIN) }
-
-    // on below line we are checking if dialog is open
-    if (gameOver.value == State.WIN) {
-        PopUp(popUpText = "You've Won!")
-    }
-    if (gameOver.value == State.LOST) {
-        PopUp(popUpText = "You lost :( ")
-    }
-}
-
-@Composable
-fun PopUp(popUpText: String) {
-// on below line we are specifying height and width
-    val popupWidth = 300.dp
-    val popupHeight = 100.dp
-    // on below line we are adding pop up
-    Popup(
-        // on below line we are adding
-        // alignment and properties.
-        alignment = Alignment.TopCenter,
-        properties = PopupProperties()
-    ) {
-
-        // on the below line we are creating a box.
-        Box(
-            // adding modifier to it.
-            Modifier
-                .size(popupWidth, popupHeight)
-                .padding(top = 5.dp)
-                // on below line we are adding background color
-                .background(Color.Red, RoundedCornerShape(10.dp))
-                // on below line we are adding border.
-                .border(1.dp, color = Color.Black, RoundedCornerShape(10.dp))
-        ) {
-
-            // on below line we are adding column
-            Column(
-                // on below line we are adding modifier to it.
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
-                // on below line we are adding horizontal and vertical
-                // arrangement to it.
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // on below line we are adding text for our pop up
-                Text(
-                    // on below line we are specifying text
-                    text = popUpText,
-                    // on below line we are specifying color.
-                    color = Color.White,
-                    // on below line we are adding padding to it
-                    modifier = Modifier.padding(vertical = 5.dp),
-                    // on below line we are adding font size.
-                    fontSize = 16.sp
-                )
-                EndGameButton()
-            }
-        }
-    }
-}
-
-@Composable
-fun EndGameButton() {
-    // on below line we are creating a column,
-    Column(
-    ) {
-        // on below line creating a button
-        // to close application
-        Button(onClick = {
-            // on below line we are creating and
-            // initializing variable for activity
-            val activity = MainActivity()
-            // on below line we are finishing activity.
-            activity.finish()
-            exitProcess(0)
-
-        }) {
-            Text(text = "Close Game")
-        }
-    }
-}
-
-@Composable
-fun RestartButton() {
-    var isPressed by remember {mutableStateOf(false)}
-    Column {
-
-    }
-    Button(
-        {
-            isPressed = true
-        }
-    ) {
-        Text(text = "Restart")
-    }
-    if(isPressed){
-        viewmodel.initGame()
-    }
-}
-
-
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BuildWord() {
-    val list by remember { mutableStateOf(viewmodel.lettersInWord)}
+    val list by remember { mutableStateOf(viewmodel.lettersInWord) }
     Column() {
         //prøv spacer
         LazyVerticalGrid(
-            cells = GridCells.Fixed(9),
+            cells = GridCells.Adaptive(100.dp),
 
             // content padding
             contentPadding = PaddingValues(
@@ -355,18 +223,10 @@ fun SpinButton() {
     }
 }
 
-@Composable
-fun GameOverMessage() {
-    val value by viewmodel.currentState
-
-    Text(value.toString(), fontSize = 25.sp)
-}
 
 @Composable
 fun ShowCategory() {
-    val curCategory by viewmodel.currentCategory
-
-    Text("Category is: $curCategory", fontSize = 20.sp)
+    Text("Category is: " + viewmodel.findCurrentWord(), fontSize = 20.sp)
 }
 
 @Composable
@@ -395,19 +255,6 @@ fun Message() {
         fontSize = 25.sp
     )
 }
-
-@Composable
-fun Layout() {
-    Column(
-        modifier = Modifier,
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    )
-    {
-        winPopUp()
-    }
-}
-
 
 @Preview(showBackground = true)
 @Composable

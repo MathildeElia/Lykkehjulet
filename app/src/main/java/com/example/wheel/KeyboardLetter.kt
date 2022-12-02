@@ -8,9 +8,6 @@ class KeyboardLetter constructor(val letter: String){
     private val _isPressed = mutableStateOf(false)
     var isPressed: State<Boolean> = _isPressed
 
-    val color = mutableStateOf(Color.Magenta)
-
-
     fun pressLetter(){
         _isPressed.value = true
     }

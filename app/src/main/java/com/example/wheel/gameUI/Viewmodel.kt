@@ -93,7 +93,7 @@ class Viewmodel : ViewModel() {
         }
     }
 
-    fun findCurrentWord() {
+    fun findCurrentWord() : String {
         val ran = (0..3).random()
         currentWord.value = allWords[1][ran]
 
@@ -104,7 +104,7 @@ class Viewmodel : ViewModel() {
                 lettersInWord.last().makeVisible()
             }
         }
-        currentCategory.value = allWords[0][ran]
+        return allWords[0][ran]
     }
 
     //returnerer spinvalue
