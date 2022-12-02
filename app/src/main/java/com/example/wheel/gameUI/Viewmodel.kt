@@ -15,23 +15,38 @@ class Viewmodel : ViewModel() {
     val spinValueString = mutableStateOf("")
     val points = mutableStateOf(0)
     val currentWord = mutableStateOf("")
+    val currentCategory = mutableStateOf("")
     val allWords: Array<Array<String>> = arrayOf(
         arrayOf("Around the House", "Rhyme Time", "On The Map", "Occupation"),
-        arrayOf("DINING ROOM TABLE", "YUMMY IN MY TUMMY", "QUEBEC", "AUTO MECHANIC")
+        arrayOf("CANDLEHOLDERS", "SUPERDUPER", "QUEBEC", "ZOOKEEPER")
     )
     var keyboardLetters = ArrayList<KeyboardLetter>()
-
 
     val currentState = mutableStateOf(State.SPIN)
 
     val guessedLettersList = mutableStateOf("")
     val lettersInWord = mutableListOf<Letter>()
 
-    fun looseALife(){
+    fun initGame() : Boolean{
+        currentState.value = State.SPIN
+        guessedLettersList.value = ""
+        lettersInWord.clear()
+        points.value = 0
+        spinValueString.value = ""
+        curSpinValue = 0
+        lives.value = 5
+        keyboardLetters.clear()
+        addValuesToKeyboard()
+        findCurrentWord()
+
+        return true
+    }
+
+    fun looseALife() {
         lives.value--
     }
 
-    fun addValuesToKeyboard(){
+    fun addValuesToKeyboard() {
         var c = 'A'
         while (c <= 'Z') {
             keyboardLetters.add(KeyboardLetter(c.toString()))
@@ -51,8 +66,9 @@ class Viewmodel : ViewModel() {
                 //gæt her
                 guess(letter = keyboardLetters[i].letter)
 
-                //Tjek om spillet er færdigt!
-                currentState.value = State.SPIN
+                if(!isGameOver()){
+                    currentState.value = State.SPIN
+                }
                 return true
             } else {
                 return false
@@ -72,20 +88,23 @@ class Viewmodel : ViewModel() {
                 points.value += curSpinValue
             }
         }
-        if(!isGuessCorrect){
+        if (!isGuessCorrect) {
             looseALife()
         }
     }
 
-    fun findCurrentWord(): String {
+    fun findCurrentWord() {
         val ran = (0..3).random()
         currentWord.value = allWords[1][ran]
 
         //make letter objects
         for (letter in currentWord.value) {
             lettersInWord.add(Letter(letter.toString()))
+            if (letter.toString() == " ") {
+                lettersInWord.last().makeVisible()
+            }
         }
-        return allWords[0][ran]
+        currentCategory.value = allWords[0][ran]
     }
 
     //returnerer spinvalue
@@ -98,7 +117,6 @@ class Viewmodel : ViewModel() {
                 points.value = 0
             } else {
                 spinValueString.value = "You spun $curSpinValue p!"
-                //det her skal ikke være her, men når der bliver gættet.
                 currentState.value = State.GUESS
             }
         }
@@ -110,5 +128,26 @@ class Viewmodel : ViewModel() {
         } else {
             return ""
         }
+    }
+
+    fun isAllLettersGuessed(): Boolean {
+        for (letter in lettersInWord) {
+            if (!letter.isVisible.value) {
+                return false
+            }
+        }
+        return true
+    }
+
+    fun isGameOver(): Boolean {
+        if (isAllLettersGuessed()) {
+            currentState.value = State.WIN
+            return true
+        }
+        if (lives.value == 0) {
+            currentState.value = State.LOST
+            return true
+        }
+        return false
     }
 }

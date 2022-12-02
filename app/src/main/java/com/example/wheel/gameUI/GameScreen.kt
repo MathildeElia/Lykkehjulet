@@ -1,35 +1,51 @@
 package com.example.wheel.gameUI
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
+import android.content.ComponentName
+import android.content.Intent
+import android.content.pm.PackageManager
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyVerticalGrid
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.navigation.NavController
 import com.example.wheel.*
+import com.example.wheel.State
 import com.example.wheel.ui.theme.WheelTheme
+import kotlin.system.exitProcess
 
 val viewmodel: Viewmodel = Viewmodel()
+
+@Composable
+fun GameScreen(navController: NavController){
+    Layout()
+}
 
 @Composable
 fun Keyboard() {
     viewmodel.addValuesToKeyboard()
 
-    Column() {
-        Row(modifier = Modifier.padding(18.dp,0.dp,0.dp,0.dp)) {
+    Column(
+        verticalArrangement = Arrangement.Bottom
+    ) {
+        Row(modifier = Modifier.padding(18.dp, 0.dp, 0.dp, 0.dp)) {
             for (i in 0..7) {
                 InsertLetterInKeyboard(i = i)
             }
@@ -48,13 +64,14 @@ fun Keyboard() {
 }
 
 @Composable
-fun InsertLetterInKeyboard(i : Int) {
-    val color = remember { mutableStateOf(Color.Magenta) }
+fun InsertLetterInKeyboard(i: Int) {
+    val color = remember { mutableStateOf(viewmodel.keyboardLetters[i].color.value) }
 
     Button(
+        //colors = ButtonDefaults.buttonColors(backgroundColor = Color.Magenta),
         onClick = {
-            if(viewmodel.pressKeyboardLetter(i)){
-                color.value = Color.LightGray
+            if (viewmodel.pressKeyboardLetter(i)) {
+                viewmodel.keyboardLetters[i].color.value = Color.LightGray
             }
         },
         contentPadding = PaddingValues(
@@ -66,8 +83,8 @@ fun InsertLetterInKeyboard(i : Int) {
         shape = RoundedCornerShape(1.dp),
         colors = ButtonDefaults.buttonColors(backgroundColor = color.value),
         modifier = Modifier
-            .size(35.dp)
-            .padding(2.dp),
+            .size(43.dp)
+            .padding(4.dp),
     )
 
     {
@@ -75,31 +92,227 @@ fun InsertLetterInKeyboard(i : Int) {
             text = viewmodel.keyboardLetters[i].letter,
             color = Color.White,
             fontWeight = FontWeight.Bold,
-            fontSize = 25.sp,
-            modifier = Modifier.offset(0.dp, (-3).dp)
+            fontSize = 28.sp,
+            //modifier = Modifier.offset(0.dp, (-3).dp)
         )
     }
 }
 
 @Composable
-fun ShowCategory() {
-    Text("Category is: " + viewmodel.findCurrentWord(), fontSize = 20.sp)
+fun winPopUp() {
+    var restartIsPressed by remember {mutableStateOf(false)}
+
+    // on below line we
+    // are specifying background color
+    // for our application
+    Surface(
+        // on below line we are specifying modifier and color for our app
+        modifier = Modifier.fillMaxSize(), color = Color.Yellow
+    ) {
+
+        Scaffold(
+            topBar = {
+                TopAppBar(backgroundColor = Color.Magenta,
+                    title = {
+                        Text(
+                            text = "Wheel of Fortune",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = Color.White
+
+                        )
+                    })
+            }) {
+            // on below line we are
+            // calling pop window dialog
+            // method to display ui.
+            Column(
+                modifier = Modifier,
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            )
+            {
+                if(!restartIsPressed){
+                    Button(onClick = {
+                        restartIsPressed = viewmodel.initGame()
+                    }) {
+                        Text(text = "Start Game! :)")
+                    }
+                }
+
+                if(restartIsPressed){
+                    PopupWindowDialog()
+                    PointsMessage()
+                    ShowLives()
+                    Message()
+                    ShowCategory()
+                    BuildWord()
+                    ValueMessage()
+                    Spacer(modifier = Modifier.height(40.dp))
+                    Text("Guessed: ${viewmodel.guessedLettersList.value}")
+                    SpinButton()
+                    Spacer(modifier = Modifier.height(40.dp))
+                    Keyboard()
+                    RestartButton()
+
+                    restartIsPressed = false
+                }
+            }
+        }
+    }
 }
 
 @Composable
+fun PopupWindowDialog() {
+    // on below line we are creating variable for button title
+    // and open dialog.
+    val gameOver = remember { mutableStateOf(State.SPIN) }
+
+    // on below line we are checking if dialog is open
+    if (gameOver.value == State.WIN) {
+        PopUp(popUpText = "You've Won!")
+    }
+    if (gameOver.value == State.LOST) {
+        PopUp(popUpText = "You lost :( ")
+    }
+}
+
+@Composable
+fun PopUp(popUpText: String) {
+// on below line we are specifying height and width
+    val popupWidth = 300.dp
+    val popupHeight = 100.dp
+    // on below line we are adding pop up
+    Popup(
+        // on below line we are adding
+        // alignment and properties.
+        alignment = Alignment.TopCenter,
+        properties = PopupProperties()
+    ) {
+
+        // on the below line we are creating a box.
+        Box(
+            // adding modifier to it.
+            Modifier
+                .size(popupWidth, popupHeight)
+                .padding(top = 5.dp)
+                // on below line we are adding background color
+                .background(Color.Red, RoundedCornerShape(10.dp))
+                // on below line we are adding border.
+                .border(1.dp, color = Color.Black, RoundedCornerShape(10.dp))
+        ) {
+
+            // on below line we are adding column
+            Column(
+                // on below line we are adding modifier to it.
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                // on below line we are adding horizontal and vertical
+                // arrangement to it.
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                // on below line we are adding text for our pop up
+                Text(
+                    // on below line we are specifying text
+                    text = popUpText,
+                    // on below line we are specifying color.
+                    color = Color.White,
+                    // on below line we are adding padding to it
+                    modifier = Modifier.padding(vertical = 5.dp),
+                    // on below line we are adding font size.
+                    fontSize = 16.sp
+                )
+                EndGameButton()
+            }
+        }
+    }
+}
+
+@Composable
+fun EndGameButton() {
+    // on below line we are creating a column,
+    Column(
+    ) {
+        // on below line creating a button
+        // to close application
+        Button(onClick = {
+            // on below line we are creating and
+            // initializing variable for activity
+            val activity = MainActivity()
+            // on below line we are finishing activity.
+            activity.finish()
+            exitProcess(0)
+
+        }) {
+            Text(text = "Close Game")
+        }
+    }
+}
+
+@Composable
+fun RestartButton() {
+    var isPressed by remember {mutableStateOf(false)}
+    Column {
+
+    }
+    Button(
+        {
+            isPressed = true
+        }
+    ) {
+        Text(text = "Restart")
+    }
+    if(isPressed){
+        viewmodel.initGame()
+    }
+}
+
+
+
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
 fun BuildWord() {
-    Row() {
-        Text(
-            buildAnnotatedString {
-                for(letter in viewmodel.lettersInWord){
-                    InsertLetterInWord(letter)
+    val list by remember { mutableStateOf(viewmodel.lettersInWord)}
+    Column() {
+        //prøv spacer
+        LazyVerticalGrid(
+            cells = GridCells.Fixed(9),
+
+            // content padding
+            contentPadding = PaddingValues(
+                start = 12.dp,
+                top = 16.dp,
+                end = 12.dp,
+                bottom = 16.dp
+            ),
+            content = {
+                items(list.size) { index ->
+                    Card(
+                        backgroundColor = Color.Magenta,
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .fillMaxWidth(),
+                        elevation = 8.dp,
+                    ) {
+                        Text(
+                            text = viewmodel.printLetter(list[index]),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 30.sp,
+                            color = Color.White,
+                            textAlign = TextAlign.Center
+                            //modifier = Modifier.padding(16.dp)
+                        )
+                    }
                 }
             }
         )
     }
 }
 
-fun Modifier.conditional(condition : Boolean, modifier : Modifier.() -> Modifier) : Modifier {
+fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
     return if (condition) {
         then(modifier(Modifier))
     } else {
@@ -116,36 +329,10 @@ fun InsertLetterInWord(letter: Letter) {
             .conditional(letter.letter != " ") {
                 border(BorderStroke(2.dp, Color.Red))
             }
-    ){
+    ) {
         Text(viewmodel.printLetter(letter))
-        /*
-        AnimatedVisibility(
-            visible = true,
-            enter = fadeIn(
-                // Fade in with the initial alpha of 0.3f.
-                initialAlpha = 0.3f
-            ), //scaleIn() + expandVertically(expandFrom = Alignment.CenterVertically),
-
-            modifier = Modifier.border(BorderStroke(2.dp, Color.Red))
-        ) {
-            Text(
-                letter.letter,
-                Modifier
-                    .size(30.dp)
-            )
-        }*/
     }
 }
-
-
-//starter med false. Funktion tager imod tal og bogstav.
-//Laver en boks med bogstavet. Ligesom tastaturet.
-//Funktionen bruges først til at lave en streng fyldt med mellemrum
-//Bagefter sættes bogstavet som der er gættet på ind.
-//Hvis bogstavet er i currentword, sættes bogstavet ind i boksen på
-//dens tilsvarende plads. Hvis ikke (den er false) så mister man et liv.
-
-
 
 @Composable
 fun SpinButton() {
@@ -166,6 +353,20 @@ fun SpinButton() {
             fontSize = 40.sp
         )
     }
+}
+
+@Composable
+fun GameOverMessage() {
+    val value by viewmodel.currentState
+
+    Text(value.toString(), fontSize = 25.sp)
+}
+
+@Composable
+fun ShowCategory() {
+    val curCategory by viewmodel.currentCategory
+
+    Text("Category is: $curCategory", fontSize = 20.sp)
 }
 
 @Composable
@@ -203,16 +404,7 @@ fun Layout() {
         horizontalAlignment = Alignment.CenterHorizontally
     )
     {
-        PointsMessage()
-        ShowLives()
-        Message()
-        ShowCategory()
-        BuildWord()
-        ValueMessage()
-        Spacer(modifier = Modifier.height(30.dp))
-        Text("Guessed: ${viewmodel.guessedLettersList.value}")
-        SpinButton()
-        Keyboard()
+        winPopUp()
     }
 }
 
@@ -224,44 +416,3 @@ fun DefaultPreview() {
         Layout()
     }
 }
-/*
-Composable
-fun Letter(letter: String) {
-    Surface(
-        modifier = Modifier.size(30.dp, 40.dp),
-        color = Color.LightGray,
-        shape = RoundedCornerShape(size = 8.dp),
-    ) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = letter,
-                color = Color.Black,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Serif
-            )
-        }
-    }
-} */
-
-/*
-Composable
-fun BuildWord(word: com.example.wheel.gameUI.Word) {
-    LazyVerticalGrid(
-        cells = GridCells.Fixed(9),
-        content = {
-
-            itemsIndexed(word.letters) { index, letter ->
-                val foundWord by remember { mutableStateOf(letter) }
-                if (foundWord.isFound.value) Letter(letter.letter) else Letter("")
-            }
-        },
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-
-        )
-} */
