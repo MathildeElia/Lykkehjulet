@@ -57,7 +57,7 @@ fun InsertLetterInKeyboard(i: Int) {
     val color = remember { mutableStateOf(Color.Magenta) }
 
     Button(
-        //colors = ButtonDefaults.buttonColors(backgroundColor = Color.Magenta),
+
         onClick = {
             if (viewmodel.pressKeyboardLetter(i)) {
                 color.value = Color.LightGray
@@ -90,11 +90,8 @@ fun InsertLetterInKeyboard(i: Int) {
 @Composable
 fun Layout(navController: NavController) {
 
-    // on below line we
-    // are specifying background color
-    // for our application
     Surface(
-        // on below line we are specifying modifier and color for our app
+
         modifier = Modifier.fillMaxSize(), color = Color.Yellow
     ) {
 
@@ -107,13 +104,10 @@ fun Layout(navController: NavController) {
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center,
                             color = Color.White
-
                         )
                     })
             }) {
-            // on below line we are
-            // calling pop window dialog
-            // method to display ui.
+
             Column(
                 modifier = Modifier,
                 verticalArrangement = Arrangement.Center,
@@ -146,11 +140,12 @@ fun Layout(navController: NavController) {
 fun BuildWord() {
     val list by remember { mutableStateOf(viewmodel.lettersInWord) }
     Column() {
-        //prøv spacer
+
+        //LazyVerticalGrid code has been taken from Jetpack Compose Plaground and then modified.
+        //Link: https://foso.github.io/Jetpack-Compose-Playground/foundation/lazyverticalgrid/
         LazyVerticalGrid(
             cells = GridCells.Adaptive(100.dp),
 
-            // content padding
             contentPadding = PaddingValues(
                 start = 12.dp,
                 top = 16.dp,
@@ -172,7 +167,6 @@ fun BuildWord() {
                             fontSize = 30.sp,
                             color = Color.White,
                             textAlign = TextAlign.Center
-                            //modifier = Modifier.padding(16.dp)
                         )
                     }
                 }

@@ -8,7 +8,6 @@ import com.example.wheel.model.State
 
 class Viewmodel : ViewModel() {
 
-    //stateflow
     var isStarted = false
     val lives = mutableStateOf(5)
     val values = arrayOf(0, 500, 600, 700, 800, 900, 10000)

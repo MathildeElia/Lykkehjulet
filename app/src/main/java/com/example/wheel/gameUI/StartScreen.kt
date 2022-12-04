@@ -17,7 +17,6 @@ import com.example.wheel.ui.theme.WheelTheme
 fun StartScreen(navController: NavController) {
 
     Surface(
-        // on below line we are specifying modifier and color for our app
         modifier = Modifier.fillMaxSize()
     ) {
 
